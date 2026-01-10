@@ -32,7 +32,7 @@ class DictionaryLookup:
             with open(path, encoding="utf-8") as f:
                 return {word.lower() for word in json.load(f)}
 
-        BASE_DIR = Path(__file__).parent
+        BASE_DIR = Path(__file__).parent / "language dictionary"
         cls.SPANISH_WORDS_TABLE = load_words(BASE_DIR / spanish_path)
         cls.FRENCH_WORDS_TABLE = load_words(BASE_DIR / french_path)
         cls.ENGLISH_WORDS_TABLE = load_words(BASE_DIR / english_path)
