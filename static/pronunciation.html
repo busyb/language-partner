@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Pronunciation Practice</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #0a0a0f; }
+    .word-score {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      margin: 0.125rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .word-score:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .pinyin-text {
+      font-size: 0.75rem;
+      color: #fbbf24;
+      font-family: monospace;
+      display: block;
+      text-align: center;
+      margin-top: 0.125rem;
+    }
+    @keyframes pulse-record {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+      50% { transform: scale(1.05); box-shadow: 0 0 40px rgba(239, 68, 68, 0.8); }
+    }
+    .recording-pulse {
+      animation: pulse-record 1.5s ease-in-out infinite;
+    }
+  </style>
+</head>
+
+<body class="bg-gradient-to-br from-gray-950 via-gray-900 to-indigo-950">
+  <div id="root"></div>
+
+</body>
+<script type="text/babel">
+  const SAMPLE_PRONUNCIATION_REPORT = {
+    meta: {
+      language: "Spanish",
+      context: "pronunciation_drill",
+      level: "None"
+    },
+    overall_pronunciation_score: 45,
+    word_accuracy: {
+      average: 45,
+      most_missed_words: [
+        { word: "puerta", issue: "missing" },
+        { word: "abierta", issue: "missing" }
+      ]
+    },
+    error_patterns: {
+      deletions: ["la", "puerta", "está", "abierta"],
+      substitutions: ["yo", "esta", "abieta", "puera"],
+      insertions: []
+    },
+    prosody_feedback: {
+      rhythm: "unstable",
+      stress: "poor",
+      timing_notes: "Words are often pronounced in a rushed manner, leading to unclear rhythms and stress placement."
+    },
+    improvement_trend: {
+      direction: "improving",
+      evidence: "The overall score has increased from 40 to 45, and the word accuracy has improved from 40 to 45. Rhythm and stress are still inconsistent."
+    },
+    targeted_drills: [
+      { focus: "stress and rhythm", example: "la puerta está abierta" }
+    ],
+    next_attempt_focus: "Continue practicing stress and rhythm, focusing on clearer pronunciation of words and maintaining a steady rhythm."
+  };
+
+  function PronunciationDrillModal({ report, reportError, setReport, setReportError, onClose }) {
+    console.log("MODAL MOUNTED", report);
+    if (!report) return null;
+
+    if (typeof report === "string") {
+      try {
+        report = JSON.parse(report);
+      } catch (e) {
+        console.error("Failed to parse report JSON", e);
+        return null;
+      }
+    }
+
+    const isEmpty = !report || Object.keys(report).length === 0;
+
+    const scoreColor = (v) =>
+      v >= 80 ? "bg-green-500" : v >= 65 ? "bg-yellow-500" : "bg-red-500";
+
+    const {
+      meta = {},
+      overall_pronunciation_score = 0,
+      word_accuracy = {},
+      error_patterns = {},
+      prosody_feedback = {},
+      improvement_trend = {},
+      targeted_drills = [],
+      next_attempt_focus = "N/A",
+    } = report;
+
+    return (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-md">
+        <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-gradient-to-br from-gray-900 via-gray-950 to-indigo-950 border border-white/10 shadow-2xl p-6 relative animate-slideUp">
+
+          {/* Close */}
+          <button
+            onClick={onClose}
+            aria-label="Close modal"
+            className="absolute top-4 right-4 text-gray-400 hover:text-white text-xl"
+          >
+            ✕
+          </button>
+
+          {isEmpty && reportError && (
+            <div className="mb-4 p-3 bg-red-500/20 border border-red-400 rounded-xl text-red-200 text-sm text-center">
+              ⚠️ {report.detail || "An error occurred. Please try again or view the sample report."}
+              <button
+                onClick={() => {
+                  setReport(SAMPLE_PRONUNCIATION_REPORT);
+                  setReportError(false);
+                }}
+                className="ml-2 px-2 py-1 bg-indigo-600 text-white rounded text-xs"
+              >
+                View Sample
+              </button>
+            </div>
+          )}
+
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-6">
+            <span className="px-3 py-1 rounded-full bg-indigo-600/30 text-indigo-300 text-xs font-semibold">
+              {meta.language || "lang"}
+            </span>
+            <span className="text-gray-400 text-xs">Pronunciation Drill Report</span>
+          </div>
+
+          {/* Overall Score */}
+          <section className="mb-6">
+            <h3 className="text-sm font-semibold text-gray-300 mb-3">
+              Overall Pronunciation Score
+            </h3>
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-white font-bold text-lg">{overall_pronunciation_score}%</span>
+              <div className="h-2 flex-1 rounded-full bg-gray-800 overflow-hidden">
+                <div
+                  className={`h-full ${scoreColor(overall_pronunciation_score)} transition-all duration-700`}
+                  style={{ width: `${overall_pronunciation_score}%` }}
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Word Accuracy */}
+          <section className="mb-6">
+            <h3 className="text-sm font-semibold text-yellow-400 mb-3">Word Accuracy</h3>
+            <div className="mb-2 text-xs text-gray-400">Average: {word_accuracy.average || 0}%</div>
+
+            <div className="space-y-2">
+              {(word_accuracy.most_missed_words || []).map((w, i) => (
+                <div
+                  key={i}
+                  className="rounded-xl p-3 bg-gray-800/60 border border-white/10 flex justify-between items-center text-sm text-gray-200"
+                >
+                  <span className="font-medium">{w.word}</span>
+                  <span className="text-xs text-yellow-300 italic">{w.issue}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Error Patterns */}
+          <section className="mb-6">
+            <h3 className="text-sm font-semibold text-red-400 mb-3">Error Patterns</h3>
+            <div className="grid sm:grid-cols-3 gap-3 text-xs">
+              <div className="rounded-xl p-3 bg-red-500/10 border border-red-500/30">
+                <div className="font-semibold text-red-200 mb-1">Deletions</div>
+                {(error_patterns.deletions || []).length > 0 ? (
+                  <ul className="list-disc list-inside text-red-100">
+                    {error_patterns.deletions.map((w, i) => <li key={i}>{w}</li>)}
+                  </ul>
+                ) : (
+                  <div className="text-red-300 italic">None</div>
+                )}
+              </div>
+
+              <div className="rounded-xl p-3 bg-red-500/10 border border-red-500/30">
+                <div className="font-semibold text-red-200 mb-1">Substitutions</div>
+                {(error_patterns.substitutions || []).length > 0 ? (
+                  <ul className="list-disc list-inside text-red-100">
+                    {error_patterns.substitutions.map((w, i) => <li key={i}>{w}</li>)}
+                  </ul>
+                ) : (
+                  <div className="text-red-300 italic">None</div>
+                )}
+              </div>
+
+              <div className="rounded-xl p-3 bg-red-500/10 border border-red-500/30">
+                <div className="font-semibold text-red-200 mb-1">Insertions</div>
+                {(error_patterns.insertions || []).length > 0 ? (
+                  <ul className="list-disc list-inside text-red-100">
+                    {error_patterns.insertions.map((w, i) => <li key={i}>{w}</li>)}
+                  </ul>
+                ) : (
+                  <div className="text-red-300 italic">None</div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* Prosody Feedback */}
+          <section className="mb-6">
+            <h3 className="text-sm font-semibold text-green-400 mb-3">Prosody Feedback</h3>
+            <div className="rounded-xl p-4 bg-green-500/10 border border-green-500/30 text-xs text-green-200 space-y-1">
+              <div>Rhythm: <span className="font-semibold">{prosody_feedback.rhythm || "N/A"}</span></div>
+              <div>Stress: <span className="font-semibold">{prosody_feedback.stress || "N/A"}</span></div>
+              <div className="italic text-green-300">{prosody_feedback.timing_notes || ""}</div>
+            </div>
+          </section>
+
+          {/* Improvement Trend */}
+          <section className="mb-6">
+            <h3 className="text-sm font-semibold text-indigo-300 mb-3">Improvement Trend</h3>
+            <div className="rounded-xl p-4 bg-indigo-600/10 border border-indigo-500/30 text-xs text-indigo-200">
+              <div>Direction: <span className="font-semibold">{improvement_trend.direction || "N/A"}</span></div>
+              <div className="italic">{improvement_trend.evidence || ""}</div>
+            </div>
+          </section>
+
+          {/* Targeted Drills */}
+          <section className="mb-6">
+            <h3 className="text-sm font-semibold text-purple-300 mb-3">Targeted Drills</h3>
+            <div className="space-y-2">
+              {(targeted_drills || []).map((d, i) => (
+                <div
+                  key={i}
+                  className="rounded-xl p-3 bg-purple-500/10 border border-purple-500/30 text-xs text-purple-200"
+                >
+                  <div className="font-semibold mb-1">{d.focus}</div>
+                  <div className="italic text-purple-300">{d.example}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Next Attempt Focus */}
+          <section>
+            <div className="rounded-xl bg-indigo-600/20 border border-indigo-500/30 p-3 text-sm text-indigo-200">
+              Next attempt focus: <span className="font-semibold">{next_attempt_focus}</span>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    );
+  }
+
+
+
+  const { useState, useEffect, useRef } = React;
+
+  function PronunciationPractice() {
+    const [language, setLanguage] = useState("es");
+    const [reportError, setReportError] = useState(false);
+    const [targetSentence, setTargetSentence] = useState("");
+    const [segments, setSegments] = useState([]);
+    const [isRecording, setIsRecording] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [wordScores, setWordScores] = useState({});
+    const [overallScore, setOverallScore] = useState(null);
+    const [hoveredWord, setHoveredWord] = useState(null);
+    const [wordTranslations, setWordTranslations] = useState({});
+    const [pronunciationCounter, setPronunciationCounter] = useState(5);
+    const [pronunciationThreshold, setPronunciationThreshold] = useState(5);
+    const [showReport, setShowReport] = useState(false);
+    const [report, setReport] = useState(null);
+    const [loadingReport, setLoadingReport] = useState(false);
+    const [sessionId] = useState(() => {
+        let id = localStorage.getItem('session_id');
+        if (!id) {
+          // Fallback if crypto.randomUUID is not available (e.g. non-https)
+          id = typeof crypto.randomUUID === 'function'
+            ? crypto.randomUUID()
+            : Math.random().toString(36).substring(2) + Date.now().toString(36);
+          localStorage.setItem('session_id', id);
+        }
+        return id;
+      });
+      console.log("🆔 Session ID:", sessionId);
+
+    const recorderRef = useRef(null);
+    const audioChunksRef = useRef([]);
+
+    useEffect(() => {
+      // Generate initial sentence on load
+      generateSentence();
+    }, []);
+
+    // Auto-generate sentence when language changes
+    useEffect(() => {
+      generateSentence();
+    }, [language]);
+
+    const generateSentence = async () => {
+      try {
+        console.log('🔄 Generating sentence for:', language);
+        const response = await fetch('/api/generate-sentence', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ language })
+        });
+
+        const data = await response.json();
+        console.log('📥 Received sentence:', data);
+        setTargetSentence(data.sentence);
+        setSegments(data.segments || []);
+        setWordScores({});
+        setOverallScore(null);
+      } catch (err) {
+        console.error('Failed to generate sentence:', err);
+        // Fallback sentence
+        setTargetSentence(language === 'es' ? 'Hola, ¿cómo estás?' : 'Hello, how are you?');
+      }
+    };
+
+    const startRecording = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mediaRecorder = new MediaRecorder(stream);
+        audioChunksRef.current = [];
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) {
+            audioChunksRef.current.push(e.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          await processPronunciation(audioBlob);
+          stream.getTracks().forEach(track => track.stop());
+        };
+
+        recorderRef.current = mediaRecorder;
+        mediaRecorder.start();
+        setIsRecording(true);
+      } catch (err) {
+        console.error('Recording failed:', err);
+        alert('Microphone access denied');
+      }
+    };
+
+    const stopRecording = () => {
+      if (recorderRef.current && recorderRef.current.state === 'recording') {
+        recorderRef.current.stop();
+        setIsRecording(false);
+        setIsProcessing(true);
+      }
+    };
+
+    const processPronunciation = async (audioBlob) => {
+      const formData = new FormData();
+      formData.append('audio', audioBlob);
+      formData.append('expected_text', targetSentence);
+      formData.append('language', language);
+
+      console.log('📤 Sending audio for scoring:', {
+        audioSize: audioBlob.size,
+        expected: targetSentence,
+        language: language
+      });
+
+      formData.append('session_id', sessionId);
+
+      try {
+        const response = await fetch('/score-pronunciation', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('📥 Received scores:', data);
+
+        setWordScores(data.per_word_scores || {});
+        setOverallScore(data.overall_score);
+
+        // Update counter from response
+        if (data.counter !== undefined) {
+          setPronunciationCounter(data.counter);
+          console.log('📊 Pronunciation counter:', data.counter);
+        }
+
+        setIsProcessing(false);
+
+        // Debug: Check if scores are correct
+        const scoreCount = Object.keys(data.per_word_scores || {}).length;
+        console.log(`✅ Processed ${scoreCount} words`);
+      } catch (err) {
+        console.error('❌ Scoring failed:', err);
+        alert('Scoring failed: ' + err.message);
+        setIsProcessing(false);
+      }
+    };
+
+    const playTargetAudio = async () => {
+      try {
+        const response = await fetch('/api/synthesize-sentence', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: targetSentence, language })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        // Get the audio blob
+        const audioBlob = await response.blob();
+        console.log('📥 Received audio blob:', audioBlob.size, 'bytes, type:', audioBlob.type);
+
+        // Create object URL and play
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+
+        audio.onloadeddata = () => console.log('✅ Audio loaded, duration:', audio.duration);
+        audio.onerror = (e) => console.error('❌ Audio playback error:', e);
+
+        await audio.play();
+        console.log('🔊 Audio playing');
+
+        // Cleanup URL after playback
+        audio.onended = () => {
+          URL.revokeObjectURL(audioUrl);
+          console.log('🧹 Audio URL cleaned up');
+        };
+      } catch (err) {
+        console.error('❌ TTS failed:', err);
+        alert('Failed to play audio: ' + err.message);
+      }
+    };
+
+    const getScoreColor = (score) => {
+      if (score === undefined) return 'bg-gray-700 text-gray-300';
+      if (score >= 80) return 'bg-green-600 text-white';
+      if (score >= 60) return 'bg-yellow-600 text-white';
+      if (score >= 40) return 'bg-orange-600 text-white';
+      return 'bg-red-600 text-white';
+    };
+
+    const translateWord = async (word) => {
+      const cacheKey = `${word}-${language}`;
+      if (wordTranslations[cacheKey]) {
+        return wordTranslations[cacheKey];
+      }
+
+      try {
+        const toLang = language === 'en' ? 'es' : 'en';
+        const response = await fetch('/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: word,
+            from_code: language,
+            to_code: toLang
+          })
+        });
+
+        const data = await response.json();
+        setWordTranslations(prev => ({ ...prev, [cacheKey]: data }));
+        return data;
+      } catch (err) {
+        console.error('Translation error:', err);
+        return null;
+      }
+    };
+
+    const handleWordClick = async (word, event) => {
+      event.stopPropagation();
+      const translation = await translateWord(word);
+
+      if (translation) {
+        setHoveredWord({
+          word,
+          translation: translation.text,
+          originalLanguage: language,  // Practice language (the original word's language)
+          position: event.target.getBoundingClientRect()
+        });
+      }
+    };
+
+    const speakWord = (text, lang) => {
+      if (!window.speechSynthesis) return;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang || language;
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    };
+
+    const fetchPronunciationReport = async () => {
+      setLoadingReport(true);
+      try {
+        const response = await fetch('/report/pronunciation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_id: sessionId,
+            language: language
+          })
+        });
+
+        const data = await response.json();
+
+        if (!data || Object.keys(data).length === 0 || data.detail) {
+          setReport({});           // empty object
+          setReportError(true);    // show error
+        } else {
+          setReport(data);
+          setReportError(false);   // hide error if valid
+        }
+
+        setShowReport(true);       // always open modal
+      } catch (err) {
+        console.error('Failed to fetch report:', err);
+        setReport({});
+        setReportError(true);
+        setShowReport(true);
+      } finally {
+        setLoadingReport(false);
+      }
+    };
+
+
+
+    const renderSentence = () => {
+      if (language === 'zh' && segments.length > 0) {
+        // Chinese with pinyin
+        return segments.map((seg, i) => {
+          if (seg.type === 'chinese') {
+            const score = wordScores[seg.chinese];
+            return (
+              <span key={i} className="inline-flex flex-col items-center mr-2">
+                <span
+                  className={`word-score ${getScoreColor(score)}`}
+                  onClick={(e) => handleWordClick(seg.chinese, e)}
+                >
+                  {seg.chinese}
+                </span>
+                <span className="pinyin-text">{seg.pinyin}</span>
+              </span>
+            );
+          } else {
+            return <span key={i}>{seg.content}</span>;
+          }
+        });
+      } else {
+        // Other languages - split by words
+        const words = targetSentence.split(/(\s+|[.,!?;:¿¡。！？、])/);
+        return words.map((token, i) => {
+          if (!token.trim() || /^[.,!?;:¿¡。！？、\s]+$/.test(token)) {
+            return <span key={i}>{token}</span>;
+          }
+
+          const cleanWord = token.toLowerCase().replace(/[.,!?;:¿¡。！？、]/g, '');
+          const score = wordScores[cleanWord];
+
+          return (
+            <span
+              key={i}
+              className={`word-score ${getScoreColor(score)}`}
+              onClick={(e) => handleWordClick(cleanWord, e)}
+            >
+              {token}
+            </span>
+          );
+        });
+      }
+    };
+
+    return (
+      <div className="min-h-screen flex flex-col items-center text-white p-4 sm:p-6 relative">
+        {/* Translation Popup */}
+        {hoveredWord && (
+          <div
+            className="fixed z-[9999] bg-gray-900 border-2 border-indigo-500 rounded-xl shadow-2xl p-3 sm:p-4 min-w-[180px] sm:min-w-[200px] max-w-[90vw]"
+            style={{
+              left: `${Math.min(Math.max(hoveredWord.position.left + hoveredWord.position.width / 2, 100), window.innerWidth - 100)}px`,
+              top: `${Math.max(hoveredWord.position.top - 10, 60)}px`,
+              transform: 'translate(-50%, -100%)'
+            }}
+            onClick={(e) => e.stopPropagation()}
+            onMouseLeave={() => setHoveredWord(null)}
+          >
+            <div className="flex items-start gap-2 sm:gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="text-xs text-gray-400 mb-1 font-medium">Original</div>
+                <div className="text-white font-semibold text-base sm:text-lg mb-1 break-words">{hoveredWord.word}</div>
+                <div className="text-xs text-indigo-300 break-words">{hoveredWord.translation}</div>
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  speakWord(hoveredWord.word, hoveredWord.originalLanguage);
+                }}
+                className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-indigo-600 hover:bg-indigo-500 transition-all flex items-center justify-center"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="18" height="18" className="sm:w-5 sm:h-5">
+                  <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation */}
+        <div className="fixed top-4 sm:top-6 left-4 sm:left-6 z-50">
+          <a
+            href="/"
+            className="px-3 py-2 sm:px-4 sm:py-2 bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-xl text-xs sm:text-sm font-semibold hover:bg-gray-800/80 transition-all"
+          >
+            ← Conversation
+          </a>
+        </div>
+
+        {/* Feedback Button */}
+        <div className="fixed bottom-4 sm:bottom-6 left-4 sm:left-6 z-50">
+          <button
+            onClick={fetchPronunciationReport}
+            disabled={pronunciationCounter < pronunciationThreshold || loadingReport}
+            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-lg flex items-center gap-2 ${
+              pronunciationCounter >= pronunciationThreshold
+                ? 'bg-green-600 hover:bg-green-500 text-white cursor-pointer'
+                : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+            }`}
+            title={pronunciationCounter < pronunciationThreshold ? `Practice ${pronunciationThreshold - pronunciationCounter} more times to unlock feedback` : 'View pronunciation feedback'}
+          >
+            {loadingReport ? (
+              <>
+                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Loading...
+              </>
+            ) : (
+              <>
+                📊 Feedback ({pronunciationCounter}/{pronunciationThreshold})
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Report Modal */}
+        {showReport && report && (
+          <PronunciationDrillModal
+              report={report}
+              reportError={reportError}
+              setReport={setReport}            // <<< add this
+              setReportError={setReportError}  // <<< add this
+              onClose={() => {
+                setShowReport(false);
+                setReportError(false);
+                setReport(null);
+              }}
+            />
+        )}
+
+        {/* Header */}
+        <div className="w-full max-w-4xl mt-16 sm:mt-20 mb-6 sm:mb-8 px-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-center mb-2">Pronunciation Practice</h1>
+          <p className="text-center text-gray-400 text-xs sm:text-sm">Record yourself saying the sentence below</p>
+        </div>
+
+        {/* Controls */}
+        <div className="w-full max-w-4xl mb-6 sm:mb-8 flex gap-2 sm:gap-4 justify-center flex-wrap px-4">
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            className="px-3 py-2 sm:px-4 sm:py-2 bg-gray-900/80 backdrop-blur-xl border border-gray-700/50 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+          >
+            <option value="en">🇺🇸 English</option>
+            <option value="es">🇪🇸 Spanish</option>
+            <option value="fr">🇫🇷 French</option>
+            <option value="zh">🇨🇳 Chinese</option>
+          </select>
+          <button
+            onClick={generateSentence}
+            disabled={isRecording || isProcessing}
+            className="px-4 py-2 sm:px-6 sm:py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs sm:text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            New Sentence
+          </button>
+        </div>
+
+        {/* Target Sentence */}
+        <div className="w-full max-w-4xl mb-6 sm:mb-8 px-4">
+          <div className="bg-gray-900/60 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-4 sm:p-8">
+            <div className="flex items-center justify-between mb-3 sm:mb-4 flex-wrap gap-2">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-300">Target Sentence</h2>
+              <button
+                onClick={playTargetAudio}
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="16" height="16" className="sm:w-5 sm:h-5">
+                  <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                </svg>
+                Listen
+              </button>
+            </div>
+            <div className="text-lg sm:text-2xl leading-relaxed text-center break-words">
+              {targetSentence ? renderSentence() : 'Loading...'}
+            </div>
+          </div>
+        </div>
+
+        {/* Score Display */}
+        {overallScore !== null && (
+          <div className="w-full max-w-4xl mb-6 sm:mb-8 px-4">
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-4 sm:p-6 text-center">
+              <div className="text-xs sm:text-sm font-medium text-indigo-200 mb-2">Overall Score</div>
+              <div className="text-4xl sm:text-6xl font-bold">{overallScore}</div>
+              <div className="text-xs sm:text-sm text-indigo-200 mt-2">
+                {overallScore >= 80 ? '🎉 Excellent!' : overallScore >= 60 ? '👍 Good job!' : overallScore >= 40 ? '📈 Keep practicing!' : '💪 Try again!'}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Record Button */}
+        <div className="mb-6 sm:mb-8 touch-none">
+          <button
+            onMouseDown={startRecording}
+            onMouseUp={stopRecording}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              startRecording();
+            }}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              stopRecording();
+            }}
+            disabled={isProcessing}
+            className={`w-28 h-28 sm:w-32 sm:h-32 rounded-full flex items-center justify-center transition-all ${
+              isRecording
+                ? 'bg-red-600 recording-pulse'
+                : 'bg-indigo-600 hover:bg-indigo-500 hover:scale-105'
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="40" height="40" className="sm:w-12 sm:h-12">
+              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+            </svg>
+          </button>
+          <p className="text-center text-gray-400 text-xs sm:text-sm mt-3 sm:mt-4">
+            {isRecording ? '🔴 Recording...' : isProcessing ? '⏳ Processing...' : 'Hold to record'}
+          </p>
+        </div>
+
+        {/* Legend */}
+        <div className="w-full max-w-4xl px-4 mb-6">
+          <div className="bg-gray-900/40 rounded-xl p-3 sm:p-4 flex justify-center gap-3 sm:gap-6 flex-wrap">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 sm:w-4 sm:h-4 rounded bg-green-600"></div>
+              <span className="text-xs sm:text-sm text-gray-300">80-100: Excellent</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 sm:w-4 sm:h-4 rounded bg-yellow-600"></div>
+              <span className="text-xs sm:text-sm text-gray-300">60-79: Good</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 sm:w-4 sm:h-4 rounded bg-orange-600"></div>
+              <span className="text-xs sm:text-sm text-gray-300">40-59: Fair</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 sm:w-4 sm:h-4 rounded bg-red-600"></div>
+              <span className="text-xs sm:text-sm text-gray-300">0-39: Needs work</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Background decoration */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-indigo-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 sm:w-96 sm:h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+        </div>
+
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById("root")).render(<PronunciationPractice />);
+</script>
+</html>

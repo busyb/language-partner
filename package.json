@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "an-array-of-english-words": "^2.0.0",
+    "an-array-of-french-words": "^2.0.0",
+    "an-array-of-spanish-words": "^2.0.0",
+    "lottie-react": "^2.4.1"
+  }
+}

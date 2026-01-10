@@ -1,0 +1,235 @@
+# ============================================
+# Python
+# ============================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.pyc
+*.pyo
+*.pyd
+
+# ============================================
+# Virtual Environments
+# ============================================
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+.virtualenv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ============================================
+# IDEs and Editors
+# ============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+.project
+.pydevproject
+.settings/
+.classpath
+
+# ============================================
+# Testing and Coverage
+# ============================================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+cov.xml
+*.cover
+*.log
+nosetests.xml
+coverage.xml
+
+# ============================================
+# Git
+# ============================================
+.git/
+.gitignore
+.gitattributes
+.gitmodules
+*.orig
+
+# ============================================
+# Docker
+# ============================================
+Dockerfile
+Dockerfile.*
+docker-compose*.yml
+.dockerignore
+*.dockerfile
+
+# ============================================
+# Documentation
+# ============================================
+README.md
+CHANGELOG.md
+LICENSE
+CONTRIBUTING.md
+docs/
+*.rst
+*.txt
+!requirements.txt
+
+# ============================================
+# CI/CD
+# ============================================
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+azure-pipelines.yml
+Jenkinsfile
+
+# ============================================
+# Environment and Configuration
+# ============================================
+.env
+.env.*
+!.env.example
+*.local
+config.local.*
+secrets/
+.secrets/
+
+# ============================================
+# Logs and Databases
+# ============================================
+*.log
+logs/
+*.sqlite
+*.sqlite3
+*.db
+*.rdb
+dump.rdb
+
+# ============================================
+# Temporary and Cache Files
+# ============================================
+tmp/
+temp/
+*.tmp
+.cache/
+.sass-cache/
+*.pid
+*.seed
+*.pid.lock
+
+# ============================================
+# OS Files
+# ============================================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.Spotlight-V100
+.Trashes
+._*
+
+# ============================================
+# Model Files and Large Data
+# ============================================
+# Models will be downloaded on first run
+models/
+*.gguf
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.onnx
+*.h5
+*.pb
+*.tflite
+*.mlmodel
+checkpoints/
+pretrained/
+
+# ============================================
+# Audio and Media Files (for development)
+# ============================================
+*.wav
+*.mp3
+*.ogg
+*.flac
+*.m4a
+*.webm
+audio_samples/
+recordings/
+
+# ============================================
+# Data Files
+# ============================================
+data/
+datasets/
+*.csv
+*.json
+*.xml
+*.yaml
+*.yml
+!**/config.yml
+!**/config.yaml
+
+# ============================================
+# Jupyter Notebooks
+# ============================================
+.ipynb_checkpoints/
+*.ipynb
+
+# ============================================
+# Package Management
+# ============================================
+Pipfile
+Pipfile.lock
+poetry.lock
+pyproject.toml
+setup.py
+setup.cfg
+MANIFEST.in
+
+# ============================================
+# Miscellaneous
+# ============================================
+.eslintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+node_modules/
+package-lock.json
+yarn.lock

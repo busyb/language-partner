@@ -1,0 +1,301 @@
+{
+  "en": {
+    "A1": [
+      "I like apples.",
+      "She is my friend.",
+      "The sun is bright.",
+      "He drinks water.",
+      "This is my book.",
+      "We go to school.",
+      "I see a dog.",
+      "The door is open.",
+      "She smiles.",
+      "It is warm today."
+    ],
+    "A2": [
+      "I usually wake up early.",
+      "She likes to read books.",
+      "We walked to the park.",
+      "He is learning English.",
+      "They live near the river.",
+      "I cooked dinner last night.",
+      "The train arrives at noon.",
+      "She bought a new phone.",
+      "We watched a movie together.",
+      "He works in an office."
+    ],
+    "B1": [
+      "I started exercising because I wanted more energy.",
+      "She explained the problem very clearly.",
+      "We decided to travel by train instead of flying.",
+      "He forgot his keys at home this morning.",
+      "They are planning a small celebration.",
+      "I felt nervous before the presentation.",
+      "She asked for advice about her job.",
+      "We waited longer than expected.",
+      "He learned a lot from the experience.",
+      "The weather changed suddenly."
+    ],
+    "B2": [
+      "Although it was raining, we continued walking.",
+      "She has been working on this project for months.",
+      "The results were better than we anticipated.",
+      "He struggled to balance work and family life.",
+      "They discussed several possible solutions.",
+      "I realized my mistake too late.",
+      "She expressed her opinion confidently.",
+      "We adapted quickly to the new system.",
+      "The book explores complex themes.",
+      "He reacted calmly under pressure."
+    ],
+    "C1": [
+      "The decision sparked a heated debate among experts.",
+      "She articulated her thoughts with remarkable clarity.",
+      "We underestimated the impact of the changes.",
+      "He questioned the assumptions behind the report.",
+      "The experience fundamentally changed my perspective.",
+      "They negotiated the terms successfully.",
+      "I found the argument intellectually stimulating.",
+      "She demonstrated exceptional leadership.",
+      "The proposal lacks sufficient evidence.",
+      "He reflected deeply on his past choices."
+    ],
+    "C2": [
+      "The policy inadvertently exacerbated existing inequalities.",
+      "She conveyed subtle nuances through precise wording.",
+      "We grappled with the ethical implications of the decision.",
+      "He dismantled the argument with surgical precision.",
+      "The narrative weaves together history and philosophy.",
+      "They navigated the crisis with extraordinary restraint.",
+      "I remain skeptical of overly simplistic explanations.",
+      "She employed irony to underscore her critique.",
+      "The discourse presupposes a high level of familiarity.",
+      "He articulated a profoundly original perspective."
+    ]
+  },
+
+  "es": {
+    "A1": [
+      "Me gusta el café.",
+      "Ella es mi amiga.",
+      "El sol brilla.",
+      "Él bebe agua.",
+      "Este es mi libro.",
+      "Vamos a casa.",
+      "Veo un perro.",
+      "La puerta está abierta.",
+      "Ella sonríe.",
+      "Hace calor hoy."
+    ],
+    "A2": [
+      "Me levanto temprano todos los días.",
+      "A ella le gusta leer.",
+      "Caminamos al parque.",
+      "Él aprende español.",
+      "Viven cerca del centro.",
+      "Cené con mi familia.",
+      "El tren llega tarde.",
+      "Compró un teléfono nuevo.",
+      "Vimos una película juntos.",
+      "Trabaja en una oficina."
+    ],
+    "B1": [
+      "Empecé a estudiar más para mejorar.",
+      "Ella explicó el problema claramente.",
+      "Decidimos viajar en autobús.",
+      "Olvidó las llaves en casa.",
+      "Planean una pequeña fiesta.",
+      "Me sentí nervioso antes del examen.",
+      "Pidió consejo a su jefe.",
+      "Esperamos más de lo previsto.",
+      "Aprendió mucho del error.",
+      "El clima cambió rápido."
+    ],
+    "B2": [
+      "Aunque estaba cansado, continuó trabajando.",
+      "Ha estado practicando durante meses.",
+      "Los resultados superaron las expectativas.",
+      "Le costó adaptarse al cambio.",
+      "Discutieron varias opciones posibles.",
+      "Me di cuenta del problema tarde.",
+      "Expresó su opinión con confianza.",
+      "Nos adaptamos rápidamente.",
+      "El libro trata temas complejos.",
+      "Mantuvo la calma bajo presión."
+    ],
+    "C1": [
+      "La decisión generó un intenso debate.",
+      "Expresó sus ideas con gran precisión.",
+      "Subestimamos el impacto del proyecto.",
+      "Cuestionó las bases del informe.",
+      "La experiencia cambió mi perspectiva.",
+      "Negociaron los términos con éxito.",
+      "Encontré el argumento convincente.",
+      "Demostró un liderazgo excepcional.",
+      "La propuesta carece de evidencia.",
+      "Reflexionó sobre sus decisiones."
+    ],
+    "C2": [
+      "La medida agravó desigualdades existentes.",
+      "Transmitió matices con gran sutileza.",
+      "Analizamos profundas implicaciones éticas.",
+      "Desmontó el argumento con precisión.",
+      "El texto fusiona historia y filosofía.",
+      "Gestionaron la crisis con moderación.",
+      "Sigo siendo escéptico ante simplificaciones.",
+      "Utilizó ironía de forma magistral.",
+      "El discurso presupone amplio conocimiento.",
+      "Formuló una visión profundamente original."
+    ]
+  },
+
+  "fr": {
+    "A1": [
+      "J’aime le thé.",
+      "Elle est mon amie.",
+      "Le soleil brille.",
+      "Il boit de l’eau.",
+      "C’est mon livre.",
+      "Nous rentrons à la maison.",
+      "Je vois un chat.",
+      "La porte est ouverte.",
+      "Elle sourit.",
+      "Il fait chaud aujourd’hui."
+    ],
+    "A2": [
+      "Je me lève tôt le matin.",
+      "Elle aime lire des livres.",
+      "Nous avons marché au parc.",
+      "Il apprend le français.",
+      "Ils habitent près d’ici.",
+      "J’ai cuisiné hier soir.",
+      "Le train arrive bientôt.",
+      "Elle a acheté un sac.",
+      "Nous avons regardé un film.",
+      "Il travaille au bureau."
+    ],
+    "B1": [
+      "J’ai commencé à étudier plus sérieusement.",
+      "Elle a expliqué le problème clairement.",
+      "Nous avons décidé de voyager ensemble.",
+      "Il a oublié son téléphone.",
+      "Ils organisent une fête.",
+      "Je me sentais stressé avant l’examen.",
+      "Elle a demandé un conseil.",
+      "Nous avons attendu longtemps.",
+      "Il a beaucoup appris.",
+      "Le temps a changé soudainement."
+    ],
+    "B2": [
+      "Bien qu’il soit fatigué, il a continué.",
+      "Elle travaille sur ce projet depuis longtemps.",
+      "Les résultats étaient inattendus.",
+      "Il a eu du mal à s’adapter.",
+      "Ils ont discuté des solutions.",
+      "J’ai compris mon erreur tardivement.",
+      "Elle a exprimé son opinion.",
+      "Nous nous sommes adaptés rapidement.",
+      "Le livre aborde des thèmes complexes.",
+      "Il est resté calme."
+    ],
+    "C1": [
+      "La décision a provoqué un débat intense.",
+      "Elle a formulé ses idées avec clarté.",
+      "Nous avons sous-estimé les conséquences.",
+      "Il a remis en question le rapport.",
+      "L’expérience a changé ma vision.",
+      "Ils ont négocié habilement.",
+      "J’ai trouvé l’argument solide.",
+      "Elle a montré un leadership remarquable.",
+      "La proposition manque de preuves.",
+      "Il a longuement réfléchi."
+    ],
+    "C2": [
+      "La réforme a exacerbé des tensions latentes.",
+      "Elle a transmis des nuances subtiles.",
+      "Nous avons examiné les implications morales.",
+      "Il a déconstruit l’argument méthodiquement.",
+      "Le récit entremêle histoire et pensée.",
+      "Ils ont géré la crise avec finesse.",
+      "Je reste critique face aux raccourcis.",
+      "Elle a utilisé l’ironie avec brio.",
+      "Le discours suppose une expertise avancée.",
+      "Il a proposé une analyse originale."
+    ]
+  },
+
+  "zh": {
+    "A1": [
+      "我喜欢苹果。",
+      "她是我的朋友。",
+      "太阳很亮。",
+      "他喝水。",
+      "这是我的书。",
+      "我们去学校。",
+      "我看到一只狗。",
+      "门是开的。",
+      "她笑了。",
+      "今天很暖和。"
+    ],
+    "A2": [
+      "我每天早上起床。",
+      "她喜欢看书。",
+      "我们走路去公园。",
+      "他在学中文。",
+      "他们住得很近。",
+      "我昨天做了晚饭。",
+      "火车快到了。",
+      "她买了新手机。",
+      "我们一起看电影。",
+      "他在公司工作。"
+    ],
+    "B1": [
+      "我开始努力学习提高自己。",
+      "她把问题解释得很清楚。",
+      "我们决定一起旅行。",
+      "他早上忘了带钥匙。",
+      "他们正在计划一个活动。",
+      "我考试前有点紧张。",
+      "她向老师请教。",
+      "我们等了很久。",
+      "他从错误中学到了东西。",
+      "天气突然变了。"
+    ],
+    "B2": [
+      "虽然很累，他还是继续工作。",
+      "她已经准备了好几个月。",
+      "结果比我们预想的好。",
+      "他很难适应变化。",
+      "他们讨论了不同方案。",
+      "我后来才意识到问题。",
+      "她自信地表达了看法。",
+      "我们很快适应了新环境。",
+      "这本书内容很复杂。",
+      "他在压力下保持冷静。"
+    ],
+    "C1": [
+      "这个决定引发了激烈的讨论。",
+      "她清晰地表达了自己的观点。",
+      "我们低估了影响。",
+      "他质疑了报告的假设。",
+      "这次经历改变了我的看法。",
+      "他们成功地进行了谈判。",
+      "我觉得这个论点很有说服力。",
+      "她展现了卓越的领导力。",
+      "这个提案证据不足。",
+      "他认真反思了过去。"
+    ],
+    "C2": [
+      "这一政策加剧了原有的不平等。",
+      "她通过精准措辞表达了细微差别。",
+      "我们深入探讨了伦理影响。",
+      "他严密地驳斥了论点。",
+      "叙述融合了历史与哲学。",
+      "他们克制而有效地应对危机。",
+      "我对简单化解释保持怀疑。",
+      "她巧妙地运用了讽刺。",
+      "这番论述假设了深厚背景。",
+      "他提出了极具原创性的观点。"
+    ]
+  }
+}

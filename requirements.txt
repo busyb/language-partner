@@ -1,0 +1,94 @@
+# ============================================
+# FastAPI and Web Server
+# ============================================
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+websockets==12.0
+starlette==0.27.0
+
+# ============================================
+# LLM and AI Models
+# ============================================
+llama-cpp-python==0.2.20
+huggingface-hub==0.19.4
+transformers==4.35.2
+torch==2.1.1
+sentencepiece==0.1.99
+
+# ============================================
+# Speech Recognition (ASR)
+# ============================================
+faster-whisper==0.10.0
+openai-whisper==20231117
+
+# ============================================
+# Text-to-Speech (TTS)
+# ============================================
+TTS==0.21.1
+pydub==0.25.1
+soundfile==0.12.1
+librosa==0.10.1
+audioread==3.0.1
+
+# ============================================
+# Translation and NLP
+# ============================================
+deep-translator==1.11.4
+googletrans==4.0.0rc1
+jieba==0.42.1
+pypinyin==0.50.0
+
+# ============================================
+# Audio Processing
+# ============================================
+numpy==1.24.3
+scipy==1.11.4
+resampy==0.4.2
+numba==0.58.1
+
+# ============================================
+# Data Handling and Utilities
+# ============================================
+python-dateutil==2.8.2
+python-dotenv==1.0.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# ============================================
+# HTTP and Networking
+# ============================================
+httpx==0.25.2
+aiofiles==23.2.1
+requests==2.31.0
+
+# ============================================
+# Database and Caching (Optional)
+# ============================================
+# redis==5.0.1
+# sqlalchemy==2.0.23
+# asyncpg==0.29.0
+
+# ============================================
+# Monitoring and Logging
+# ============================================
+# prometheus-client==0.19.0
+# python-json-logger==2.0.7
+
+# ============================================
+# Development and Testing (Comment out for production)
+# ============================================
+# pytest==7.4.3
+# pytest-asyncio==0.21.1
+# pytest-cov==4.1.0
+# black==23.12.0
+# flake8==6.1.0
+# mypy==1.7.1
+# isort==5.13.2
+
+# ============================================
+# Security (Production)
+# ============================================
+# python-jose[cryptography]==3.3.0
+# passlib[bcrypt]==1.7.4
+# python-multipart==0.0.6
