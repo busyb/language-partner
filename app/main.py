@@ -254,6 +254,7 @@ async def chat_ws_time_fixed(websocket: WebSocket):
                 second_token_time: float | None = None
                 llm_start_time = time.perf_counter()
                 token_buffer = ""
+                print(messages)
 
                 for chunk in llm_stream.stream(messages):
                     token = chunk

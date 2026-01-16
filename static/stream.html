@@ -364,6 +364,8 @@
       const [loadingReport, setLoadingReport] = useState(false);
       const [showReportModal, setShowReportModal] = useState(false);
       const hoverTimeoutRef = useRef(null);
+      const [cachedAudioChunks, setCachedAudioChunks] = useState([]);
+      const cachedAudioRef = useRef([]);
 
       // Debug: Log counter changes
       useEffect(() => {
@@ -547,6 +549,8 @@
             }
           }
 
+          // Cache the audio chunk
+          cachedAudioRef.current.push(float32);
           audioQueueRef.current.push(float32);
 
           if (!isPlayingRef.current) {
@@ -583,14 +587,23 @@
         isPlayingRef.current = true;
         const chunk = audioQueueRef.current.shift();
 
-        console.log("🎵 Playing chunk - samples:", chunk.length, "queue remaining:", audioQueueRef.current.length);
+        console.log("🎵 Playing chunk - samples:", chunk.length, "queue remaining:", audioQueueRef.current.length, "speed:", speed);
 
+        // Create buffer from chunk
         const buffer = audioCtx.createBuffer(1, chunk.length, 24000);
         buffer.getChannelData(0).set(chunk);
 
+        // Apply pitch-preserving time stretch if speed is not 1.0
+        let processedBuffer = buffer;
+        if (Math.abs(speed - 1.0) > 0.05) {
+          console.log("🎛️ Applying pitch-preserving time stretch at rate:", speed);
+          processedBuffer = timeStretchAudio(buffer, speed, audioCtx);
+        }
+
         const source = audioCtx.createBufferSource();
-        source.buffer = buffer;
-        source.playbackRate.value = speed;
+        source.buffer = processedBuffer;
+        // Don't modify playbackRate - we've already time-stretched
+        source.playbackRate.value = 1.0;
         source.connect(audioCtx.destination);
 
         currentSourceRef.current = source;
@@ -603,12 +616,14 @@
 
         try {
           source.start(0);
-          console.log("▶️ Audio source started");
+          console.log("▶️ Audio source started with time-stretch at speed:", speed);
         } catch (err) {
           console.error("❌ Failed to start audio:", err);
           isPlayingRef.current = false;
         }
       };
+
+
 
       const startRecording = async () => {
         if (!wsReadyRef.current) return;
@@ -617,6 +632,7 @@
         setResponse("");
         setAssistantSegments([]);
         audioQueueRef.current = [];
+        cachedAudioRef.current = []; // Clear cached audio for new recording
 
         setState("listening");
         setActivePress(true);
@@ -722,11 +738,68 @@
         return btoa(binary);
       };
 
+      // Pitch-preserving time stretch using overlap-add method
+      const timeStretchAudio = (audioBuffer, rate, audioContext) => {
+        if (rate === 1.0) return audioBuffer;
+
+        const originalData = audioBuffer.getChannelData(0);
+        const originalLength = originalData.length;
+        const newLength = Math.floor(originalLength / rate);
+
+        // Create new buffer for stretched audio
+        const stretchedBuffer = audioContext.createBuffer(1, newLength, audioBuffer.sampleRate);
+        const stretchedData = stretchedBuffer.getChannelData(0);
+
+        // Time-stretch parameters
+        const windowSize = 2048; // Analysis window size
+        const hopSize = Math.floor(windowSize / 4); // 75% overlap
+        const synthesisHop = Math.floor(hopSize * rate);
+
+        // Hanning window for smooth transitions
+        const window = new Float32Array(windowSize);
+        for (let i = 0; i < windowSize; i++) {
+          window[i] = 0.5 * (1 - Math.cos(2 * Math.PI * i / (windowSize - 1)));
+        }
+
+        let inputPos = 0;
+        let outputPos = 0;
+
+        // Overlap-add time stretching
+        while (inputPos + windowSize < originalLength && outputPos + windowSize < newLength) {
+          // Apply windowed segment
+          for (let i = 0; i < windowSize && outputPos + i < newLength; i++) {
+            const inputIndex = Math.floor(inputPos + i);
+            if (inputIndex < originalLength) {
+              stretchedData[outputPos + i] += originalData[inputIndex] * window[i];
+            }
+          }
+
+          inputPos += synthesisHop;
+          outputPos += hopSize;
+        }
+
+        // Normalize to prevent clipping
+        let maxVal = 0;
+        for (let i = 0; i < newLength; i++) {
+          maxVal = Math.max(maxVal, Math.abs(stretchedData[i]));
+        }
+        if (maxVal > 0.95) {
+          const normalizeGain = 0.95 / maxVal;
+          for (let i = 0; i < newLength; i++) {
+            stretchedData[i] *= normalizeGain;
+          }
+        }
+
+        return stretchedBuffer;
+      };
+
       const slower = () => {
         setSpeed(prev => {
-          const next = Math.max(0.5, prev - 0.1);
-          if (currentSourceRef.current) {
-            currentSourceRef.current.playbackRate.value = next;
+          const next = Math.max(0.6, +(prev - 0.1).toFixed(1));
+          console.log("🐢 Speed decreased to:", next);
+          // Force re-render by triggering a playback update
+          if (isPlayingRef.current && audioQueueRef.current.length > 0) {
+            console.log("⏸️ Speed changed during playback - will apply to next chunk");
           }
           return next;
         });
@@ -734,9 +807,11 @@
 
       const faster = () => {
         setSpeed(prev => {
-          const next = Math.min(2.0, prev + 0.1);
-          if (currentSourceRef.current) {
-            currentSourceRef.current.playbackRate.value = next;
+          const next = Math.min(1.8, +(prev + 0.1).toFixed(1));
+          console.log("🐇 Speed increased to:", next);
+          // Force re-render by triggering a playback update
+          if (isPlayingRef.current && audioQueueRef.current.length > 0) {
+            console.log("⏸️ Speed changed during playback - will apply to next chunk");
           }
           return next;
         });
@@ -750,6 +825,29 @@
         if(match) u.voice = match;
         window.speechSynthesis.cancel();
         window.speechSynthesis.speak(u);
+      };
+
+      const replayResponse = () => {
+        if (cachedAudioRef.current.length === 0) {
+          console.log("⚠️ No cached audio to replay");
+          return;
+        }
+
+        console.log("🔁 Replaying cached audio - chunks:", cachedAudioRef.current.length);
+
+        // Stop current playback
+        if (currentSourceRef.current) {
+          currentSourceRef.current.stop();
+          currentSourceRef.current = null;
+        }
+
+        // Clear queue and reload from cache
+        audioQueueRef.current = [...cachedAudioRef.current];
+        isPlayingRef.current = false;
+
+        setState("responding");
+        playNextChunk();
+        startAudioMonitoring();
       };
 
       const translateSentence = async (text) => {
@@ -1053,30 +1151,53 @@
               className="fixed z-[9999] bg-gray-900 border-2 border-indigo-500 rounded-xl shadow-2xl p-4 min-w-[200px] max-w-[90vw] max-h-[60vh] overflow-auto"
               style={{
                 left: (() => {
-                  const popupWidth = 240; // approx width in px
+                  const popupWidth = 280;
                   const screenWidth = window.innerWidth;
                   let x = sentenceTranslation.position.left + sentenceTranslation.position.width / 2;
+
+                  // Center on mobile
+                  if (screenWidth < 640) {
+                    return '50%';
+                  }
+
                   // Prevent overflow right
-                  if (x + popupWidth / 2 > screenWidth - 10) x = screenWidth - popupWidth / 2 - 10;
+                  if (x + popupWidth / 2 > screenWidth - 20) x = screenWidth - popupWidth / 2 - 20;
                   // Prevent overflow left
-                  if (x - popupWidth / 2 < 10) x = popupWidth / 2 + 10;
+                  if (x - popupWidth / 2 < 20) x = popupWidth / 2 + 20;
                   return `${x}px`;
                 })(),
                 top: (() => {
-                  const popupHeight = 120; // approx height in px
+                  const popupHeight = 150;
                   const screenHeight = window.innerHeight;
+                  const screenWidth = window.innerWidth;
                   let y = sentenceTranslation.position.top - 10;
+
+                  // Center vertically on mobile
+                  if (screenWidth < 640) {
+                    return '50%';
+                  }
+
                   // If too high, move below the element
                   if (y - popupHeight < 10) y = sentenceTranslation.position.bottom + 10;
                   // Prevent bottom overflow
                   if (y + popupHeight > screenHeight - 10) y = screenHeight - popupHeight - 10;
                   return `${y}px`;
                 })(),
-                transform: 'translate(-50%, -100%)', // adjust later if needed
+                transform: window.innerWidth < 640 ? 'translate(-50%, -50%)' : 'translate(-50%, -100%)',
                 pointerEvents: 'auto'
               }}
               onClick={(e) => e.stopPropagation()}
-              onMouseLeave={() => setSentenceTranslation(null)}
+              onMouseLeave={() => {
+                hoverTimeoutRef.current = setTimeout(() => {
+                  setSentenceTranslation(null);
+                }, 300);
+              }}
+              onMouseEnter={() => {
+                if (hoverTimeoutRef.current) {
+                  clearTimeout(hoverTimeoutRef.current);
+                  hoverTimeoutRef.current = null;
+                }
+              }}
             >
               <div className="flex items-start gap-3">
                 <div className="flex-1">
@@ -1114,9 +1235,37 @@
             <div
               className="fixed z-[9999] bg-gray-900 border-2 border-indigo-500 rounded-xl shadow-2xl p-4 min-w-[200px]"
               style={{
-                left: `${hoveredWord.position.left + hoveredWord.position.width / 2}px`,
-                top: `${hoveredWord.position.top - 10}px`,
-                transform: 'translate(-50%, -100%)',
+                left: (() => {
+                  const popupWidth = 240;
+                  const screenWidth = window.innerWidth;
+                  let x = hoveredWord.position.left + hoveredWord.position.width / 2;
+
+                  // Center on mobile
+                  if (screenWidth < 640) {
+                    return '50%';
+                  }
+
+                  // Prevent overflow
+                  if (x + popupWidth / 2 > screenWidth - 20) x = screenWidth - popupWidth / 2 - 20;
+                  if (x - popupWidth / 2 < 20) x = popupWidth / 2 + 20;
+                  return `${x}px`;
+                })(),
+                top: (() => {
+                  const popupHeight = 120;
+                  const screenHeight = window.innerHeight;
+                  const screenWidth = window.innerWidth;
+                  let y = hoveredWord.position.top - 10;
+
+                  // Center vertically on mobile
+                  if (screenWidth < 640) {
+                    return '50%';
+                  }
+
+                  if (y - popupHeight < 10) y = hoveredWord.position.bottom + 10;
+                  if (y + popupHeight > screenHeight - 10) y = screenHeight - popupHeight - 10;
+                  return `${y}px`;
+                })(),
+                transform: window.innerWidth < 640 ? 'translate(-50%, -50%)' : 'translate(-50%, -100%)',
                 pointerEvents: 'auto'
               }}
               onClick={(e) => e.stopPropagation()}
@@ -1131,7 +1280,7 @@
                 // Delay hiding the popup
                 hoverTimeoutRef.current = setTimeout(() => {
                   setHoveredWord(null);
-                }, 800); // 800ms delay
+                }, 300);
               }}
             >
               <div className="flex items-start gap-3">
@@ -1307,16 +1456,32 @@
                           {renderClickableText(response, false)}
                         </div>
                       </div>
-                      {/* Sentence Translate Button */}
-                      <button
-                        onClick={(e) => handleSentenceTranslate(response, e)}
-                        className="ml-2 w-8 h-8 rounded-lg bg-indigo-600 hover:bg-indigo-500 transition flex items-center justify-center text-white"
-                        title="Translate sentence"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24" width="16" height="16">
-                          <path d="M12 3v2h6.59L5.29 18.29l1.42 1.42L20 6.41V13h2V3h-8z"/>
-                        </svg>
-                      </button>
+                      {/* Action buttons container */}
+                      <div className="flex gap-2">
+                        {/* Replay button */}
+                        {cachedAudioRef.current.length > 0 && (
+                          <button
+                            onClick={() => replayResponse()}
+                            className="w-8 h-8 rounded-lg bg-purple-600 hover:bg-purple-500 transition flex items-center justify-center text-white active:scale-95"
+                            title="Replay audio"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24" width="16" height="16">
+                              <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+                            </svg>
+                          </button>
+                        )}
+
+                        {/* Translate sentence button */}
+                        <button
+                          onClick={(e) => handleSentenceTranslate(response, e)}
+                          className="w-8 h-8 rounded-lg bg-indigo-600 hover:bg-indigo-500 transition flex items-center justify-center text-white active:scale-95"
+                          title="Translate sentence"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24" width="16" height="16">
+                            <path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/>
+                          </svg>
+                        </button>
+                      </div>
 
                     </div>
                   </div>
@@ -1334,7 +1499,10 @@
                 −
               </button>
               <div className="px-4 py-2 bg-gray-900/60 backdrop-blur-sm border border-gray-700/50 rounded-lg">
-                <span className="text-sm font-mono text-gray-300">{speed.toFixed(1)}×</span>
+                <div className="flex flex-col items-center">
+                  <span className="text-sm font-mono text-gray-300">{speed.toFixed(1)}×</span>
+                  <span className="text-xs text-gray-500">pitch preserved</span>
+                </div>
               </div>
               <button
                 onClick={faster}
