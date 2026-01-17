@@ -254,7 +254,7 @@ async def chat_ws_time_fixed(websocket: WebSocket):
                 second_token_time: float | None = None
                 llm_start_time = time.perf_counter()
                 token_buffer = ""
-                print(messages)
+                print(json.dumps(messages, indent=2, ensure_ascii=False))
 
                 for chunk in llm_stream.stream(messages):
                     token = chunk
@@ -614,6 +614,14 @@ async def synthesize_sentence(request: SynthesizeRequest):
         filename="sentence.wav",
         background=background_tasks
     )
+@app.post("/test/conversation")
+async def generate_sentence(request: GenerateSentenceRequest):
+    lang = request.language
+    sentence = app.state.llm_streamer.generate_sentence_file(lang)
+    segments = (
+        app.state.pinyin.add_pinyin_to_text_structured(sentence) if lang == "zh" else []
+    )
+    return {"sentence": sentence, "segments": segments}
 
 
 if __name__ == "__main__":

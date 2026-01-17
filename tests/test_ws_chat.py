@@ -18,11 +18,15 @@ from tempfile import NamedTemporaryFile
 import subprocess
 
 from fastapi.testclient import TestClient
+from llama_cpp import Llama
 from starlette.websockets import WebSocketDisconnect
 
 from app.main import app
 import pytest
 from unittest.mock import MagicMock
+
+from utility.llm_streamer import LLMStreamer
+from utility.prompt_manager import PromptManager
 
 client = TestClient(app)
 
@@ -531,6 +535,134 @@ def generate_all_user_audio(user_phrases: dict[str, list[str]]):
             wav_buffer.seek(0)
             with open(output_file, "wb") as f:
                 f.write(wav_buffer.read())
+
+
+def test_conversation():
+    # --- Init LLM ---
+    base_llm = Llama.from_pretrained(
+        repo_id="Qwen/Qwen2.5-3B-Instruct-GGUF",
+        filename="qwen2.5-3b-instruct-q4_k_m.gguf",
+        n_ctx=2048,
+        n_gpu_layers=-1,
+        n_threads=8
+    )
+    llm = LLMStreamer(llm=base_llm, llm_type="llama_cpp")
+
+    # --- Init conversation ---
+    manager = PromptManager()
+    state = manager.initialize_conversation(
+        lang_pair="en-es",
+        difficulty="B1"
+    )
+
+    # --- User starts first ---
+    user_response = " Me gustaría practicar conversación en español."
+
+    for turn in range(5):
+        print(f"\n--- Turn {turn + 1} ---")
+        print("User:", user_response)
+
+        # 1️⃣ Store user turn
+
+        # 2️⃣ Build full chat context from history
+        messages = manager.build_chat_messages(state=state,user_input=user_response)
+
+        manager.update_history_user(state, user_response)
+
+        print(json.dumps(messages, indent=2, ensure_ascii=False))
+
+        # 3️⃣ Assistant responds using full context
+        ai_response = llm.call_llm_not_stream(messages)
+
+        # 4️⃣ Store assistant turn
+        manager.update_history_assistant(state, ai_response)
+
+        # 5️⃣ Simulated learner generates next response
+        messages = build_test_user_messages("es", "B1", ai_response)
+        user_response = llm.respondToAI(messages)
+        print("AI:", ai_response)
+
+    # --- Assertions ---
+    assert len(state.messages) > 5
+
+def build_test_user_messages(lang: str, difficulty: str, ai_response: str) -> list[dict]:
+    """
+    Build messages for test user responding to AI.
+    Optimized for Qwen2.5-3B - minimal and direct.
+
+    Args:
+        lang_pair: Language pair (e.g., "en-es")
+        difficulty: CEFR level (e.g., "B1")
+        ai_response: The AI's message to respond to
+
+    Returns:
+        List of message dicts for LLM
+    """
+
+    LANG_MAP = {
+        "en": "English",
+        "es": "Spanish",
+        "fr": "French",
+        "zh": "Chinese",
+    }
+    target_lang = LANG_MAP.get(lang)
+
+    # Difficulty constraints
+    constraints = {
+        "A1": "1-2 very simple sentences.",
+        "A2": "2 simple sentences.",
+        "B1": "2-3 natural sentences.",
+        "B2": "3-4 conversational sentences.",
+        "C1": "Natural, native-like response.",
+        "C2": "Fully natural native speaker."
+    }
+    constraint = constraints.get(difficulty.upper(), constraints["B1"])
+
+    # Language-specific prompts
+    if lang == "es":
+        system = f"""Eres Alex, un neoyorquino aprendiendo español. Nivel: {difficulty}
+Estás chateando con un amigo. {constraint}
+
+Habla de tu vida: pizza, béisbol, el metro, tu trabajo.
+No ofrezcas ayuda. Solo chatea como amigo.
+Responde natural, sin saludos extra."""
+
+        user = f"Tu amigo dice: '{ai_response}'\nResponde natural en español."
+
+    elif lang == "fr":
+        system = f"""Tu es Alex, un New-Yorkais qui apprend le français. Niveau: {difficulty}
+Tu discutes avec un ami. {constraint}
+
+Parle de ta vie: pizza, baseball, métro, boulot.
+N'offre pas d'aide. Discute comme un ami.
+Réponds naturellement, sans salutations."""
+
+        user = f"Ton ami dit: '{ai_response}'\nRéponds naturellement en français."
+
+    elif lang == "zh":
+        system = f"""你是Alex，一个学中文的纽约人。等级：{difficulty}
+你在和朋友聊天。{constraint}
+
+聊你的生活：披萨、棒球、地铁、工作。
+不要提供帮助。像朋友一样聊天。
+自然回复，不用额外打招呼。"""
+
+        user = f"你朋友说：'{ai_response}'\n用中文自然回复。"
+
+    else:
+        system = f"""You're Alex, a New Yorker learning {target_lang}. Level: {difficulty}
+You're chatting with a friend. {constraint}
+
+Talk about your life: pizza, baseball, subway, work.
+Don't offer help. Just chat as a friend.
+Respond naturally, no extra greetings."""
+
+        user = f"Your friend says: '{ai_response}'\nRespond naturally in {target_lang}."
+
+    return [
+        {"role": "system", "content": system},
+        {"role": "user", "content": user}
+    ]
 
 
 def test_generate_all_user_audio():

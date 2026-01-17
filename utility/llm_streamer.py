@@ -96,7 +96,7 @@ class LLMStreamer:
         inside_think = False
 
         if self.llm_type == "llama_cpp":
-            stream = self.llm.create_chat_completion(messages=messages, stream=True)
+            stream = self.llm.create_chat_completion(messages=messages, stream=True, temperature=1, frequency_penalty=0.7)
             for chunk in stream:
                 delta = chunk["choices"][0]["delta"].get("content")
                 if not delta:
@@ -173,9 +173,51 @@ class LLMStreamer:
         else:
             return str(response).strip()
 
-    def call_llm_not_stream(self, messages, temperature: float = 0.6):
+    def respondToAI(self, messages):
+        """
+        Generate Alex's response to the AI's message.
+        Now uses the optimized PromptManager method.
+        """
+        # Get the language pair (assuming you have this info)
+        # Build messages using PromptManager
 
-        return self.llm.create_chat_completion(
+        # Call your LLM
+        response = self.call_llm_not_stream(messages)
+
+        # Standardizing response extraction
+        if isinstance(response, dict) and "choices" in response:
+            content = response["choices"][0]["message"]["content"].strip()
+        else:
+            content = str(response).strip()
+
+        # Cleaning: Sometimes small models wrap responses in quotes
+        return content.replace('"', '').replace('Alex:', '').strip()
+
+    def get_general_lifestyle_topics(self) -> str:
+        """
+        Returns a list of 10 general conversation topics to keep
+        the dialogue dynamic and natural.
+        """
+        topics = [
+            "querer ir a un concierto de rock este fin de semana",
+            "el estreno de una película de terror en el cine",
+            "ganas de ir a un museo de arte moderno",
+            "planear una cena en un restaurante tailandés",
+            "necesidad de comprar zapatillas nuevas para caminar",
+            "el último libro que empezaste a leer anoche",
+            "un podcast de crímenes reales que te tiene enganchado",
+            "ganas de salir a bailar salsa o merengue",
+            "la pereza de tener que ir al gimnasio más tarde",
+            "el plan de hacer una excursión o senderismo el domingo"
+        ]
+
+        # Returning a random choice is best for the 3B model's focus
+        return random.choice(topics)
+
+
+    def call_llm_not_stream(self, messages, temperature: float = 1):
+
+        return self.llm.create_chat_completion(frequency_penalty=0.6,
             messages=messages,
             stream=False,
             temperature=temperature  # Uses passed value or 0.6
